@@ -1,0 +1,76 @@
+version: '3'
+services:
+  eureka-server:
+    image: your-eureka-image
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - your-network
+
+  gateway:
+    image: your-gateway-image
+    container_name: gateway
+    ports:
+      - "8888:8888"
+    networks:
+      - your-network
+    environment:
+      - SPRING_CLOUD_DISCOVERY_ENABLED=true
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+    depends_on:
+      - eureka-server
+
+  service-car:
+    image: your-service-car-image
+    container_name: service-car
+    ports:
+      - "8082:8082"
+    networks:
+      - your-network
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-car:3306/carservicedb
+    depends_on:
+      - eureka-server
+      - mysql-car
+
+  service-client:
+    image: your-service-client-image
+    container_name: service-client
+    ports:
+      - "8081:8081"
+    networks:
+      - your-network
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-client:3306/clientservicedb
+    depends_on:
+      - eureka-server
+      - mysql-client
+
+  mysql-car:
+    image: mysql:latest
+    container_name: mysql-car
+    ports:
+      - "3306:3306"
+    networks:
+      - your-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=""
+      - MYSQL_DATABASE=carservicedb
+
+  mysql-client:
+    image: mysql:latest
+    container_name: mysql-client
+    ports:
+      - "3307:3306"
+    networks:
+      - your-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=""
+      - MYSQL_DATABASE=clientservicedb
+
+networks:
+  your-network:
+    driver: bridge
